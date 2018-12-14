@@ -25,16 +25,16 @@ public class Main {
         // 2-выход из комнаты(антибаг)
         // 3-стены комнаты
 
-        int roomsCount = 4; // Выставляем количство комнат
+        int roomsCount = 3; // Выставляем количство комнат
 
         Random random = new Random();
-        //int maze[][] = new int[size][size];                                                                             // Пустой квадрат
+        //int maze[][] = new int[size][size];                                                                                   // Пустой квадрат
         int maze[][] = createDungeon(size, roomsCount, true);
-        maze[0][0] = 1;                                                                                                 // Задаем стартовую позицию как посещенную
-        int keyCellsCount = (size % 2 != 0) ? ((int)Math.pow((size + 1), 2) / 4) : ((int)Math.pow((size), 2) / 4);      // Колличество ключевых ячеек, где будем останавливаться
-        int filledKeyCells = 1 + (roomsCount * 4); //TODO: сделать динамическое получение заполеных клеток от комнат                 // Заполненные ключевые ячейки
-        int nowPos = 0;                                                                                                 // Текущая позиция
-        Coordinates[] position = new Coordinates[keyCellsCount];                                                        // Массив с пройденными координатами
+        maze[0][0] = 1;                                                                                                         // Задаем стартовую позицию как посещенную
+        int keyCellsCount = (size % 2 != 0) ? ((int)Math.pow((size + 1), 2) / 4) : ((int)Math.pow((size), 2) / 4);              // Колличество ключевых ячеек, где будем останавливаться
+        int filledKeyCells = 1 + (roomsCount * 4); //TODO: сделать динамическое получение заполеных клеток от комнат(класс)     // Заполненные ключевые ячейки
+        int nowPos = 0;                                                                                                         // Текущая позиция
+        Coordinates[] position = new Coordinates[keyCellsCount];                                                                // Массив с пройденными координатами
         position[nowPos] = new Coordinates();
         position[nowPos].setX(0);
         position[nowPos].setY(0);
@@ -222,10 +222,6 @@ public class Main {
         private int x;
         private int y;
 
-        public int getX() {
-            return x;
-        }
-
         public Coordinates() {
 
         }
@@ -233,6 +229,10 @@ public class Main {
         public Coordinates(int x, int y){
             this.x = x;
             this.y = y;
+        }
+
+        public int getX() {
+            return x;
         }
 
         public int getY() {
