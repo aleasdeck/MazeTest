@@ -146,32 +146,32 @@ public class Main {
                 dungeon[randomX + i][randomY + j] = 1;
             }
         }
-
+        // TODO: Исправить баг, когда выход из комнаты, ведет вникуда(можно присваивать выходу не единицу а 2...[SOLVED]
         int way = random.nextInt(4) + 1; // Делаем вход в комнату
-        if(way == 1) dungeon[randomX + (width/2)][randomY - 1] = 1;
-        if(way == 2) dungeon[randomX + (width/2)][randomY + height] = 1;
-        if(way == 3) dungeon[randomX - 1][randomY + (height/2)] = 1;
-        if(way == 4) dungeon[randomX + width][randomY + (height/2)] = 1;
+        if(way == 1) { dungeon[randomX + (width/2)][randomY - 1] = 1; dungeon[randomX + (width/2)][randomY - 2] = 2; }
+        if(way == 2) { dungeon[randomX + (width/2)][randomY + height] = 1; dungeon[randomX + (width/2)][randomY + height + 1] = 2; }
+        if(way == 3) { dungeon[randomX - 1][randomY + (height/2)] = 1; dungeon[randomX - 2][randomY + (height/2)] = 2; }
+        if(way == 4) { dungeon[randomX + width][randomY + (height/2)] = 1; dungeon[randomX + width + 1][randomY + (height/2)] = 2; }
 
         return dungeon;
     }
 
     private static boolean checkCellsAround(int[][] maze, Coordinates position) {
 
-        if(position.getX() - 2 >= 0) if(maze[position.getX() - 2][position.getY()] == 0) return true;            // x-
-        if(position.getX() + 2 <= maze.length) if(maze[position.getX() + 2][position.getY()] == 0) return true;  // x+
-        if(position.getY() - 2 >= 0) if(maze[position.getX()][position.getY() - 2] == 0) return true;            // y-
-        if(position.getY() + 2 <= maze.length) if(maze[position.getX()][position.getY() + 2] == 0) return true;  // y+
+        if(position.getX() - 2 >= 0) if(maze[position.getX() - 2][position.getY()] != 1) return true;            // x-
+        if(position.getX() + 2 <= maze.length) if(maze[position.getX() + 2][position.getY()] != 1) return true;  // x+
+        if(position.getY() - 2 >= 0) if(maze[position.getX()][position.getY() - 2] != 1) return true;            // y-
+        if(position.getY() + 2 <= maze.length) if(maze[position.getX()][position.getY() + 2] != 1) return true;  // y+
 
         return false;
     }
 
     private static boolean checkCellGoTo(int[][] maze, Coordinates position, int way, int keyOrWall) {  // way - направление, keyOrWall - 2-ключевая клетка, 1-стена
 
-        if(way == 1) if(position.getX() - 2 >= 0) if(maze[position.getX() - keyOrWall][position.getY()] == 0) return true;            // x-
-        if(way == 2) if(position.getX() + 2 <= maze.length) if(maze[position.getX() + keyOrWall][position.getY()] == 0) return true;  // x+
-        if(way == 3) if(position.getY() - 2 >= 0) if(maze[position.getX()][position.getY() - keyOrWall] == 0) return true;            // y-
-        if(way == 4) if(position.getY() + 2 <= maze.length) if(maze[position.getX()][position.getY() + keyOrWall] == 0) return true;  // y+
+        if(way == 1) if(position.getX() - 2 >= 0) if(maze[position.getX() - keyOrWall][position.getY()] != 1) return true;            // x-
+        if(way == 2) if(position.getX() + 2 <= maze.length) if(maze[position.getX() + keyOrWall][position.getY()] != 1) return true;  // x+
+        if(way == 3) if(position.getY() - 2 >= 0) if(maze[position.getX()][position.getY() - keyOrWall] != 1) return true;            // y-
+        if(way == 4) if(position.getY() + 2 <= maze.length) if(maze[position.getX()][position.getY() + keyOrWall] != 1) return true;  // y+
 
         return false;
     }
