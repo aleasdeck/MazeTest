@@ -5,7 +5,7 @@ import java.util.Random;
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Maze v1.4 upd: Поддержка нескольких комнат");
+        System.out.println("Maze v1.5 upd: Исправлена ошибка с генерацией в зависимости от количества комнат");
         System.out.println("__________________________________________\n");
 
         int[][] maze = generateMaze(21, false);
@@ -25,14 +25,17 @@ public class Main {
         // 2-выход из комнаты(антибаг)
         // 3-стены комнаты
 
-        int roomsCount = 3; // Выставляем количство комнат
+        int roomsCount = 3;                                                                                                     // Выставляем количство комнат которое хотим видеть
 
         Random random = new Random();
         //int maze[][] = new int[size][size];                                                                                   // Пустой квадрат
-        int maze[][] = createDungeon(size, roomsCount, true);
+        MazeWithRoom crDung = createDungeon(size, roomsCount, true);
+        int maze[][] = crDung.getMaze();                                                                                        // Получаем пустой лабиринт с комнатами
+        int realRoomsCount = crDung.getRoomsCount();                                                                            // Количество комнат которое удалось сгенерировать
+
         maze[0][0] = 1;                                                                                                         // Задаем стартовую позицию как посещенную
         int keyCellsCount = (size % 2 != 0) ? ((int)Math.pow((size + 1), 2) / 4) : ((int)Math.pow((size), 2) / 4);              // Колличество ключевых ячеек, где будем останавливаться
-        int filledKeyCells = 1 + (roomsCount * 4); //TODO: сделать динамическое получение заполеных клеток от комнат(класс)     // Заполненные ключевые ячейки
+        int filledKeyCells = 1 + (realRoomsCount * 4); //TODO: сделать динамическое получение заполеных клеток от комнат(класс) // Заполненные ключевые ячейки
         int nowPos = 0;                                                                                                         // Текущая позиция
         Coordinates[] position = new Coordinates[keyCellsCount];                                                                // Массив с пройденными координатами
         position[nowPos] = new Coordinates();
@@ -113,34 +116,65 @@ public class Main {
                     }
                 } while(!exit);
             }
-
-
         }
 
         return maze;
     }
 
-    private static int[][] createDungeon(int size, int roomsCount, boolean isDungeon) {
+    private static MazeWithRoom createDungeon(int size, int roomsCount, boolean isDungeon) { // юзлес метод, выпилить в продакшене если плагин когда-нибудь понадобится(нет)
 
         int[][] dungeon = new int[size][size];
+        int finalRoomsCount = 0;
 
-        if(isDungeon) { // TODO:сделать проверку на влезаемость комнат
+        if(isDungeon) { // TODO:[SOLVED]сделать проверку на влезаемость комнат[SOLVED]
             for (int i = 0; i < roomsCount; i++) {
-                createRoomInDungeon(dungeon, 3, 3);
+                MazeWithRoom cR = createRoomInDungeon(dungeon, 3, 3);
+                finalRoomsCount += cR.getRoomsCount();
             }
         }
 
-        return dungeon;
+        return new MazeWithRoom(dungeon, finalRoomsCount);
     }
 
-    private static int[][] createRoomInDungeon(int[][] dungeon, int width, int height) { // width и height задаются без учета стен
+    public static class MazeWithRoom{
+
+        private int[][] maze;
+        private int roomsCount;
+
+        public  MazeWithRoom() {
+
+        }
+
+        public MazeWithRoom(int[][] maze, int roomsCount) {
+            this.maze = maze;
+            this.roomsCount = roomsCount;
+        }
+
+        public int[][] getMaze() {
+            return maze;
+        }
+
+        public void setMaze(int[][] maze) {
+            this.maze = maze;
+        }
+
+        public int getRoomsCount() {
+            return roomsCount;
+        }
+
+        public void setRoomsCount(int roomsCount) {
+            this.roomsCount = roomsCount;
+        }
+    }
+
+    private static MazeWithRoom createRoomInDungeon(int[][] dungeon, int width, int height) { // width и height задаются без учета стен
 
         int maxRandomXValue = (dungeon.length - 2) - width - 2; // Задаем максимальные значения рандома координат
         int maxRandomYValue = (dungeon.length - 2) - height - 2;
 
         if (maxRandomXValue < 0 || maxRandomYValue < 0) { // Если не подходит по параметрам возвращаем лабиринт без комнаты
             System.out.println("Maze too small");
-            return dungeon;
+            return new MazeWithRoom(dungeon, 0);
         }
 
         Random random = new Random(); // Генерируем координаты
@@ -167,9 +201,9 @@ public class Main {
 
             if(failCounter > 10) {                               // Регулируем количество попыток создания начальной точки
                 System.out.println("Not enough place");
-                return dungeon;
+                return new MazeWithRoom(dungeon, 0);
             }
-        } while(!exit);                                                         // TODO:[SOLVED]возможен баг, если вторая комната больше первой, пока такого функционала нет[SOLVED]
+        } while(!exit);  // TODO:[SOLVED]возможен баг, если вторая комната больше первой, пока такого функционала нет[SOLVED]
 
         for(int i = 0; i < width; i++) { // Генерируем комнату
             for (int j = 0; j < height; j++) {
@@ -194,7 +228,7 @@ public class Main {
         if(way == 3) { dungeon[randomX - 1][randomY + (height/2)] = 1; dungeon[randomX - 2][randomY + (height/2)] = 2; }
         if(way == 4) { dungeon[randomX + width][randomY + (height/2)] = 1; dungeon[randomX + width + 1][randomY + (height/2)] = 2; }
 
-        return dungeon;
+        return new MazeWithRoom(dungeon, 1);
     }
 
     private static boolean checkCellsAround(int[][] maze, Coordinates position) {
