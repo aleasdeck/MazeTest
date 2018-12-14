@@ -5,10 +5,10 @@ import java.util.Random;
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Maze v1.2 upd: Комнаты стабилизированы");
+        System.out.println("Maze v1.3 upd: Одна комната работает корректно");
         System.out.println("_______________________________________________\n");
 
-        int[][] maze = generateMaze(11, false);
+        int[][] maze = generateMaze(7, false);
         for(int i = 0; i < maze.length; i++) {
             for (int j = 0; j < maze.length; j++) {
                 System.out.print(maze[i][j] + " ");
@@ -18,6 +18,12 @@ public class Main {
     }
 
     private static int[][] generateMaze(int size, boolean multiPath){
+
+        // Гайд по цифрам:
+        // 0-стена
+        // 1-обычный проход
+        // 2-выход из комнаты(антибаг)
+        // 3-стены комнаты
 
         Random random = new Random();
         //int maze[][] = new int[size][size];                                                                             // Пустой квадрат
@@ -118,7 +124,7 @@ public class Main {
 
         if(isDungeon) { // TODO: сделать проверку на влезаемость комнат
             for (int i = 0; i < roomsCount; i++) {
-                dungeon = createRoomInDungeon(dungeon, 3, 3);
+                createRoomInDungeon(dungeon, 3, 3);
             }
         }
 
@@ -144,8 +150,14 @@ public class Main {
         for(int i = 0; i < width; i++) { // Генерируем комнату
             for (int j = 0; j < height; j++) {
                 dungeon[randomX + i][randomY + j] = 1;
+
+                if(i == 0) dungeon[randomX + i - 1][randomY + j] = 3; // Делаем стены для комнаты
+                if(i == 0) dungeon[randomX + i + width][randomY + j] = 3;
+                if(j == 0) dungeon[randomX + i][randomY + j - 1] = 3;
+                if(j == 0) dungeon[randomX + i][randomY + j + height] = 3;
             }
         }
+
         // TODO: Исправить баг, когда выход из комнаты, ведет вникуда(можно присваивать выходу не единицу а 2...[SOLVED]
         int way = random.nextInt(4) + 1; // Делаем вход в комнату
         if(way == 1) { dungeon[randomX + (width/2)][randomY - 1] = 1; dungeon[randomX + (width/2)][randomY - 2] = 2; }
