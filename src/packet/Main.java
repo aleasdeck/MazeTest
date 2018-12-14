@@ -5,10 +5,10 @@ import java.util.Random;
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Maze v1.3 upd: Одна комната работает корректно");
-        System.out.println("_______________________________________________\n");
+        System.out.println("Maze v1.4 upd: Поддержка нескольких комнат");
+        System.out.println("__________________________________________\n");
 
-        int[][] maze = generateMaze(7, false);
+        int[][] maze = generateMaze(21, false);
         for(int i = 0; i < maze.length; i++) {
             for (int j = 0; j < maze.length; j++) {
                 System.out.print(maze[i][j] + " ");
@@ -25,12 +25,14 @@ public class Main {
         // 2-выход из комнаты(антибаг)
         // 3-стены комнаты
 
+        int roomsCount = 4; // Выставляем количство комнат
+
         Random random = new Random();
         //int maze[][] = new int[size][size];                                                                             // Пустой квадрат
-        int maze[][] = createDungeon(size, 1, true);
+        int maze[][] = createDungeon(size, roomsCount, true);
         maze[0][0] = 1;                                                                                                 // Задаем стартовую позицию как посещенную
         int keyCellsCount = (size % 2 != 0) ? ((int)Math.pow((size + 1), 2) / 4) : ((int)Math.pow((size), 2) / 4);      // Колличество ключевых ячеек, где будем останавливаться
-        int filledKeyCells = 1 + (4); //TODO: сделать динамическое получение заполеных клеток отк комнат                // Заполненные ключевые ячейки
+        int filledKeyCells = 1 + (roomsCount * 4); //TODO: сделать динамическое получение заполеных клеток от комнат                 // Заполненные ключевые ячейки
         int nowPos = 0;                                                                                                 // Текущая позиция
         Coordinates[] position = new Coordinates[keyCellsCount];                                                        // Массив с пройденными координатами
         position[nowPos] = new Coordinates();
@@ -122,7 +124,7 @@ public class Main {
 
         int[][] dungeon = new int[size][size];
 
-        if(isDungeon) { // TODO: сделать проверку на влезаемость комнат
+        if(isDungeon) { // TODO:сделать проверку на влезаемость комнат
             for (int i = 0; i < roomsCount; i++) {
                 createRoomInDungeon(dungeon, 3, 3);
             }
@@ -142,23 +144,50 @@ public class Main {
         }
 
         Random random = new Random(); // Генерируем координаты
-        int randomX = maxRandomXValue > 0 ? random.nextInt(maxRandomXValue) + 2 : 2;
-        int randomY = maxRandomYValue > 0 ? random.nextInt(maxRandomYValue) + 2 : 2;
-        if(randomX % 2 != 0 ) randomX++;
-        if(randomY % 2 != 0 ) randomY++;
+        int randomX, randomY;
+
+            // Проверка на возможность добавления комнаты
+        boolean exit;
+        int failCounter = 0; // Количество неудачных попыток создания начальной точки для комнаты, до выхода из генерации
+        do {
+            exit = true;
+            randomX = maxRandomXValue > 0 ? random.nextInt(maxRandomXValue) + 2 : 2;
+            randomY = maxRandomYValue > 0 ? random.nextInt(maxRandomYValue) + 2 : 2;
+            if(randomX % 2 != 0 ) randomX++;
+            if(randomY % 2 != 0 ) randomY++;
+
+            for(int i = 0; i < width+2; i++){
+                for(int j = 0; j < height+2; j++){
+                    if(dungeon[randomX+i][randomY+j] != 0) {
+                        failCounter++;
+                        exit = false;
+                    }
+                }
+            }
+
+            if(failCounter > 10) {                               // Регулируем количество попыток создания начальной точки
+                System.out.println("Not enough place");
+                return dungeon;
+            }
+        } while(!exit);                                                         // TODO:[SOLVED]возможен баг, если вторая комната больше первой, пока такого функционала нет[SOLVED]
 
         for(int i = 0; i < width; i++) { // Генерируем комнату
             for (int j = 0; j < height; j++) {
                 dungeon[randomX + i][randomY + j] = 1;
 
-                if(i == 0) dungeon[randomX + i - 1][randomY + j] = 3; // Делаем стены для комнаты
-                if(i == 0) dungeon[randomX + i + width][randomY + j] = 3;
+                if(i == 0) dungeon[randomX + i - 1][randomY + j] = 3;       // Делаем стены для комнаты (опционально, можно выпилить, использовать можно
+                if(i == 0) dungeon[randomX + i + width][randomY + j] = 3;   // как для изменения цвета стен, так и для того, чтобы не рандомило разбитие)
                 if(j == 0) dungeon[randomX + i][randomY + j - 1] = 3;
                 if(j == 0) dungeon[randomX + i][randomY + j + height] = 3;
             }
         }
+        // TODO:[SOLVED]баг, комнаты могут встать полностью вертикально или горизонтально и выходы срандомятся друг в друга[SOLVED]
+        dungeon[randomX - 1][randomY - 1] = 3;
+        dungeon[randomX + width][randomY + height] = 3;
+        dungeon[randomX + width][randomY - 1] = 3;
+        dungeon[randomX - 1][randomY + height] = 3;
 
-        // TODO: Исправить баг, когда выход из комнаты, ведет вникуда(можно присваивать выходу не единицу а 2...[SOLVED]
+        // TODO:[SOLVED] Исправить баг, когда выход из комнаты, ведет вникуда(можно присваивать выходу не единицу а 2...[SOLVED]
         int way = random.nextInt(4) + 1; // Делаем вход в комнату
         if(way == 1) { dungeon[randomX + (width/2)][randomY - 1] = 1; dungeon[randomX + (width/2)][randomY - 2] = 2; }
         if(way == 2) { dungeon[randomX + (width/2)][randomY + height] = 1; dungeon[randomX + (width/2)][randomY + height + 1] = 2; }
