@@ -5,10 +5,10 @@ import java.util.Random;
 public class Main {
     public static void main(String[] args) {
 
-        System.out.println("Hello world! Сегодня мы будем строить лабиринт, \nну шо народ, погнале нах....й, е...ан..й рооот");
+        System.out.println("Maze v1.2 upd: Комнаты стабилизированы");
         System.out.println("_______________________________________________\n");
 
-        int[][] maze = generateMaze(5, true);
+        int[][] maze = generateMaze(11, false);
         for(int i = 0; i < maze.length; i++) {
             for (int j = 0; j < maze.length; j++) {
                 System.out.print(maze[i][j] + " ");
@@ -20,10 +20,11 @@ public class Main {
     private static int[][] generateMaze(int size, boolean multiPath){
 
         Random random = new Random();
-        int maze[][] = new int[size][size];                                                                             // Пустой квадрат
+        //int maze[][] = new int[size][size];                                                                             // Пустой квадрат
+        int maze[][] = createDungeon(size, 1, true);
         maze[0][0] = 1;                                                                                                 // Задаем стартовую позицию как посещенную
         int keyCellsCount = (size % 2 != 0) ? ((int)Math.pow((size + 1), 2) / 4) : ((int)Math.pow((size), 2) / 4);      // Колличество ключевых ячеек, где будем останавливаться
-        int filledKeyCells = 1;                                                                                         // Заполненные ключевые ячейки
+        int filledKeyCells = 1 + (4); //TODO: сделать динамическое получение заполеных клеток отк комнат                // Заполненные ключевые ячейки
         int nowPos = 0;                                                                                                 // Текущая позиция
         Coordinates[] position = new Coordinates[keyCellsCount];                                                        // Массив с пройденными координатами
         position[nowPos] = new Coordinates();
@@ -105,49 +106,54 @@ public class Main {
                 } while(!exit);
             }
 
-            /*int breakingWallsCount = (int)Math.pow((size / 5), 2);          // Колличество ломаемых стен
-            int posIndexForBreak, wayForBreak;
 
-            for(int i = 0; i <  breakingWallsCount; i++){
-                boolean exit = false;
-                do {
-                    posIndexForBreak = random.nextInt(position.length);
-                    wayForBreak = random.nextInt(4) + 1;
-
-                    System.out.print("Pos:" + posIndexForBreak + " ");
-                    for(Coordinates coords : position) System.out.print("|x:" + coords.getX() + "y:" + coords.getY());
-                    System.out.print(" X:" + position[posIndexForBreak].getX());
-                    System.out.print(" Y:" + position[posIndexForBreak].getY());
-                    System.out.println(" Way:" + wayForBreak);
-
-                    if(checkCellGoTo(maze, position[posIndexForBreak], wayForBreak, 1)) {
-                        if(wayForBreak == 1) {
-                            System.out.println("1");
-                            maze[position[posIndexForBreak].getX() - 1][position[posIndexForBreak].getY()] = 1;
-                            exit = true;
-                            } // вверх
-                        if(wayForBreak == 2) {
-                            System.out.println("2");
-                            maze[position[posIndexForBreak].getX() + 1][position[posIndexForBreak].getY()] = 1;
-                            exit = true;
-                            } // вниз
-                        if(wayForBreak == 3) {
-                            System.out.println("3");
-                            maze[position[posIndexForBreak].getX()][position[posIndexForBreak].getY() - 1] = 1;
-                            exit = true;
-                            } // влево
-                        if(wayForBreak == 4) {
-                            System.out.println("4");
-                            maze[position[posIndexForBreak].getX()][position[posIndexForBreak].getY() + 1] = 1;
-                            exit = true;
-                            } // вправо
-                    }
-                }
-                while(!exit);
-            }*/
         }
 
         return maze;
+    }
+
+    private static int[][] createDungeon(int size, int roomsCount, boolean isDungeon) {
+
+        int[][] dungeon = new int[size][size];
+
+        if(isDungeon) { // TODO: сделать проверку на влезаемость комнат
+            for (int i = 0; i < roomsCount; i++) {
+                dungeon = createRoomInDungeon(dungeon, 3, 3);
+            }
+        }
+
+        return dungeon;
+    }
+
+    private static int[][] createRoomInDungeon(int[][] dungeon, int width, int height) { // width и height задаются без учета стен
+
+        int maxRandomXValue = (dungeon.length - 2) - width - 2; // Задаем максимальные значения рандома координат
+        int maxRandomYValue = (dungeon.length - 2) - height - 2;
+
+        if (maxRandomXValue < 0 || maxRandomYValue < 0) { // Если не подходит по параметрам возвращаем лабиринт без комнаты
+            System.out.println("Maze too small");
+            return dungeon;
+        }
+
+        Random random = new Random(); // Генерируем координаты
+        int randomX = maxRandomXValue > 0 ? random.nextInt(maxRandomXValue) + 2 : 2;
+        int randomY = maxRandomYValue > 0 ? random.nextInt(maxRandomYValue) + 2 : 2;
+        if(randomX % 2 != 0 ) randomX++;
+        if(randomY % 2 != 0 ) randomY++;
+
+        for(int i = 0; i < width; i++) { // Генерируем комнату
+            for (int j = 0; j < height; j++) {
+                dungeon[randomX + i][randomY + j] = 1;
+            }
+        }
+
+        int way = random.nextInt(4) + 1; // Делаем вход в комнату
+        if(way == 1) dungeon[randomX + (width/2)][randomY - 1] = 1;
+        if(way == 2) dungeon[randomX + (width/2)][randomY + height] = 1;
+        if(way == 3) dungeon[randomX - 1][randomY + (height/2)] = 1;
+        if(way == 4) dungeon[randomX + width][randomY + (height/2)] = 1;
+
+        return dungeon;
     }
 
     private static boolean checkCellsAround(int[][] maze, Coordinates position) {
